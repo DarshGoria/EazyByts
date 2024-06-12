@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Page</title>
+    <style>
+        body {
+            background-color: #ddff05;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header img {
+            width: 150px;
+            height: auto;
+        }
+        h1 {
+            color: #2b00ff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #d1ff05;
+            color: rgb(0, 0, 0);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn:hover {
+            background-color: #ddff05;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #000000;
+        }
+        .course-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .course-item, .add-course-item {
+            flex: 1 1 300px;
+            background-color: #5563ab;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgb(255, 255, 255);
+        }
+        .action-buttons {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .student-list {
+            margin-top: 10px;
+        }
+        .student-item {
+            margin-bottom: 5px;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <!-- Header section -->
+        <div class="header">
+            <h1>Instructor Page</h1>
+            <img src="image/logo.png" alt="Company Logo"> <!-- Replace 'logo.png' with the actual path to your logo -->
+            <div><strong>Logged in as:</strong> <span id="instructor-name"></span></div>
+        </div>
+        
+        <!-- Add Course form -->
+        <h2>Add Course</h2>
+        <div class="add-course-item">
+            <form id="add-course-form">
+                <div class="form-group">
+                    <label for="course-name">Course Name:</label>
+                    <input type="text" id="course-name" name="course-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="course-id">Course ID:</label>
+                    <input type="text" id="course-id" name="course-id" required>
+                </div>
+                <button type="submit" class="btn">Add Course</button>
+            </form>
+        </div>
+
+        <!-- Courses section -->
+        <h2>Courses</h2>
+        <div class="course-list" id="course-list">
+            <!-- Courses will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        var loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || {};
+        var courses = JSON.parse(localStorage.getItem('courses')) || [];
+
+        // Display instructor name
+        document.getElementById('instructor-name').textContent = loggedInUser.email;
+
+        // Function to add a course
+        function addCourse(name, id) {
+            var course = {
+                name: name,
+                id: id,
+                students: [],
+                materials: [] // Initialize materials array
+            };
+            courses.push(course);
+            localStorage.setItem('courses', JSON.stringify(courses));
+            displayCourses();
+        }
+
+        // Function to display courses
+        function displayCourses() {
+            var courseList = document.getElementById("course-list");
+            courseList.innerHTML = "";
+            courses.forEach(function(course, index) {
+                var courseItem = document.createElement("div");
+                courseItem.classList.add("course-item");
+                courseItem.innerHTML = "<strong>Course Name:</strong> " + course.name + "<br><strong>Course ID:</strong> " + course.id +
+                    "<div class='action-buttons'>" +
+                    "<button class='btn' onclick='manageStudents(" + index + ")'>Manage Students</button> " +
+                    "<button class='btn' onclick='uploadMaterial(" + index + ")'>Upload Material</button>" +
+                    "<button class='btn' onclick='deleteCourse(" + index + ")'>Delete Course</button>" +
+                    "</div>" +
+                    "<div class='student-list' id='student-list-" + index + "'></div>";
+                courseList.appendChild(courseItem);
+                displayStudents(index);
+            });
+        }
+
+        // Function to manage students
+        function manageStudents(courseIndex) {
+            var course = courses[courseIndex];
+            var studentListDiv = document.getElementById("student-list-" + courseIndex);
+            var addStudentForm = document.createElement("form");
+            addStudentForm.innerHTML =
+                "<div class='form-group'>" +
+                "<label for='student-name-" + courseIndex + "'>Student Name:</label>" +
+                "<input type='text' id='student-name-" + courseIndex + "' name='student-name' required>" +
+                "</div>" +
+                "<div class='form-group'>" +
+                "<label for='student-id-" + courseIndex + "'>Student ID:</label>" +
+                "<input type='text' id='student-id-" + courseIndex + "' name='student-id' required>" +
+                "</div>" +
+                "<button type='button' class='btn' onclick='addStudent(" + courseIndex + ")'>Add Student</button>";
+            studentListDiv.innerHTML = "";
+            studentListDiv.appendChild(addStudentForm);
+
+            displayStudents(courseIndex);
+        }
+
+        // Function to display students
+        function displayStudents(courseIndex) {
+            var course = courses[courseIndex];
+            var studentListDiv = document.getElementById("student-list-" + courseIndex);
+            var studentList = "<h3>Current Students:</h3>";
+            course.students.forEach(function(student, index) {
+                studentList +=
+                    "<div class='student-item'>" +
+                    "<strong>Name:</strong> " + student.name + " <strong>ID:</strong> " + student.id +
+                    " <button class='btn' onclick='deleteStudent(" + courseIndex + ", " + index + ")'>Delete</button>" +
+                    "</div>";
+            });
+            studentListDiv.innerHTML += studentList;
+        }
+
+        // Function to add a student
+        function addStudent(courseIndex) {
+            var course = courses[courseIndex];
+            var studentName = document.getElementById("student-name-" + courseIndex).value;
+            var studentId = document.getElementById("student-id-" + courseIndex).value;
+            if (studentName && studentId) {
+                course.students.push({ name: studentName, id: studentId });
+                localStorage.setItem('courses', JSON.stringify(courses));
+                manageStudents(courseIndex);
+            }
+        }
+
+        // Function to delete a student
+        function deleteStudent(courseIndex, studentIndex) {
+            var course = courses[courseIndex];
+            course.students.splice(studentIndex, 1);
+            localStorage.setItem('courses', JSON.stringify(courses));
+            manageStudents(courseIndex);
+        }
+
+        // Function to upload material
+        function uploadMaterial(courseIndex) {
+            var fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'application/pdf'; // Limit to PDF files (you can change this)
+            fileInput.onchange = function(event) {
+                var file = event.target.files[0];
+                if (file) {
+                    var course = courses[courseIndex];
+                    course.materials.push(file); // Store the file in the materials array
+                    localStorage.setItem('courses', JSON.stringify(courses));
+                    alert('Material uploaded successfully.');
+                } else {
+                    alert('No file selected.');
+                }
+            };
+            fileInput.click(); // Trigger file input click event
+        }
+
+        // Function to delete a course
+        function deleteCourse(courseIndex) {
+            courses.splice(courseIndex, 1);
+            localStorage.setItem('courses', JSON.stringify(courses));
+            displayCourses();
+        }
+
+        // Add course form submit event listener
+        document.getElementById("add-course-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var courseName = document.getElementById("course-name").value;
+            var courseId = document.getElementById("course-id").value;
+            addCourse(courseName, courseId);
+            document.getElementById("add-course-form").reset();
+        });
+
+        // Initial display of courses
+        displayCourses();
+    </script>
+</body>
+</html>

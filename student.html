@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Page</title>
+    <style>
+        body {
+            background-color: #ddff05;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header img {
+            width: 150px;
+            height: auto;
+        }
+        h1 {
+            color: #2b00ff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #d1ff05;
+            color: rgb(0, 0, 0);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn:hover {
+            background-color: #ddff05;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #000000;
+        }
+        .course-list {
+            display:flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .course-item, .add-course-item {
+            flex: 1 1 300px;
+            background-color: #5563ab;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgb(255, 255, 255);
+        }
+        .action-buttons {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .student-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #5563ab;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .material-list {
+            margin-top: 10px;
+        }
+        .material-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Student Page</h1>
+            <img src="image/logo.png" alt="Company Logo"> <!-- Replace 'logo.png' with the actual path to your logo -->
+        </div>
+
+        <div class="student-details" id="student-details">
+            <h2>Student Details</h2>
+            <p><strong>Name:</strong> <span id="student-name"></span></p>
+            <p><strong>Student ID:</strong> <span id="student-id"></span></p>
+            <h3>Enrolled Courses</h3>
+            <ul id="enrolled-courses-list"></ul>
+                <!-- Enrolled courses will be dynamically added here -->
+            </ul>
+            <button onclick="unenrollAllCourses()">Unenroll All Courses</button>
+        </div>
+
+        <h2>Available Courses</h2>
+        <div class="course-list" id="course-list">
+            <!-- Courses will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Initialize student details
+        var student = JSON.parse(localStorage.getItem('student')) || { name: 'John Doe', id: '12345', enrolledCourses: [] };
+        var courses = JSON.parse(localStorage.getItem('courses')) || [];
+
+        // Display student details
+        function displayStudentDetails() {
+            document.getElementById('student-name').textContent = student.name;
+            document.getElementById('student-id').textContent = student.id;
+            displayEnrolledCourses();
+        }
+
+        // Display enrolled courses
+        function displayEnrolledCourses() {
+            var enrolledCoursesList = document.getElementById('enrolled-courses-list');
+            enrolledCoursesList.innerHTML = '';
+            student.enrolledCourses.forEach(function(course) {
+                var li = document.createElement('li');
+                li.textContent = course.name + ' (' + course.id + ')';
+                enrolledCoursesList.appendChild(li); // Append the <li> element to the list
+            });
+        }
+
+        // Display available courses
+        function displayCourses() {
+            var courseList = document.getElementById('course-list');
+            courseList.innerHTML = '';
+            courses.forEach(function(course, index) {
+                var courseItem = document.createElement('div');
+                courseItem.classList.add('course-item');
+                courseItem.innerHTML = "<strong>Course Name:</strong> " + course.name + "<br><strong>Course ID:</strong> " + course.id +
+                    "<div class='action-buttons'>" +
+                    "<button class='btn' onclick='enrollCourse(" + index + ")'>Enroll</button>" +
+                    "<button class='btn' onclick='unenrollCourse(" + index + ")'>Unenroll</button>" + // New button for unenrolling
+                    "</div>" +
+                    "<div class='material-list' id='material-list-" + course.id + "'></div>";
+                courseList.appendChild(courseItem);
+                displayMaterials(course.id);
+            });
+        }
+        
+     // Enroll course function
+     function enrollCourse(courseIndex) {
+    var course = courses[courseIndex];
+    if (!student.enrolledCourses.some(c => c.id === course.id)) {
+        // Update student's enrolled courses
+        student.enrolledCourses.push(course);
+        localStorage.setItem('student', JSON.stringify(student));
+
+        // Create an <li> element for the enrolled course
+        var li = document.createElement('li');
+        li.textContent = course.name + ' (' + course.id + ')';
+        var enrolledCoursesList = document.getElementById('enrolled-courses-list');
+        enrolledCoursesList.appendChild(li);
+
+        // Update course with student enrollment
+        courses[courseIndex].students.push({ name: student.name, id: student.id });
+        localStorage.setItem('courses', JSON.stringify(courses));
+
+        // Display updated details
+        displayStudentDetails();
+        displayCourses(); // This will update the courses list for both student and instructor
+    }
+}
+
+
+ // Unenroll course function
+ function unenrollCourse(courseIndex) {
+            var course = courses[courseIndex];
+            var enrolledIndex = student.enrolledCourses.findIndex(c => c.id === course.id);
+            if (enrolledIndex !== -1) {
+                // Remove from student's enrolled courses
+                student.enrolledCourses.splice(enrolledIndex, 1);
+                localStorage.setItem('student', JSON.stringify(student));
+
+                // Remove from course's students
+                var studentIndex = course.students.findIndex(s => s.id === student.id);
+                if (studentIndex !== -1) {
+                    course.students.splice(studentIndex, 1);
+                    localStorage.setItem('courses', JSON.stringify(courses));
+                }
+
+                // Display updated details
+                displayStudentDetails();
+                displayCourses();
+            }
+        }
+
+        // Unenroll all courses function
+        function unenrollAllCourses() {
+            student.enrolledCourses = [];
+            localStorage.setItem('student', JSON.stringify(student));
+            courses.forEach(course => {
+                course.students = course.students.filter(s => s.id !== student.id);
+            });
+            localStorage.setItem('courses', JSON.stringify(courses));
+            displayStudentDetails();
+            displayCourses();
+        }
+
+        // Display materials for a specific course
+        function displayMaterials(courseId) {
+            var course = courses.find(c => c.id === courseId);
+            var materialListDiv = document.getElementById('material-list-' + courseId);
+            materialListDiv.innerHTML = '<h3>Materials</h3>';
+            if (course && course.materials) {
+                course.materials.forEach(function(material) {
+                    var materialItem = document.createElement('div');
+                    materialItem.classList.add('material-item');
+                    materialItem.textContent = material.name;
+                    materialListDiv.appendChild(materialItem);
+                });
+            }
+        }
+
+        // Download materials function
+        function downloadMaterials(courseId) {
+            var course = courses.find(c => c.id === courseId);
+            if (course && course.materials && course.materials.length > 0) {
+                alert('Downloading materials for course: ' + course.name);
+                // Implement the actual download logic here
+            } else {
+                alert('No materials available for this course.');
+            }
+        }
+
+        // Initial display
+       
+        displayStudentDetails();
+        displayCourses();
+    </script>
+</body>
+</html>
